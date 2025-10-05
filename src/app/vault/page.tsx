@@ -2,22 +2,22 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { HomeView } from "@/components/home/HomeView";
+import { VaultView } from "@/components/vault/VaultView";
 
-const page = async () => {
+const Page = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if(!session){
-    redirect('/signin');
+  if (!session) {
+    redirect("/signin");
   }
 
-  return(
-    <div className="p-10">
-      <HomeView />
+  return (
+    <div>
+        <VaultView />
     </div>
   );
 };
 
-export default page;
+export default Page;
