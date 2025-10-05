@@ -14,10 +14,13 @@ import {
   FileText,
   User,
   Check,
+  RefreshCw, // Added missing import
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { PasswordService } from "@/services/passwordServices";
+import { ThemeToggle } from "../theme-toggle";
 
 interface PasswordItem {
   id: string;
@@ -39,68 +42,25 @@ export const VaultView = () => {
   const [copiedUsernameId, setCopiedUsernameId] = useState<string | null>(null);
   const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual database fetch
+  // Fetch passwords from API
   useEffect(() => {
     const fetchPasswords = async () => {
       try {
-        // Simulate API call
-        setTimeout(() => {
-          setPasswords([
-            {
-              id: "1",
-              title: "Gmail Account",
-              username: "john.doe@gmail.com",
-              password: "securePassword123!",
-              url: "https://gmail.com",
-              notes: "Personal email account with 2FA enabled",
-              lastModified: "2024-01-15",
-              created: "2023-12-01",
-            },
-            {
-              id: "2",
-              title: "GitHub",
-              username: "johndoe",
-              password: "githubSecure456@",
-              url: "https://github.com",
-              notes: "Work account for company projects",
-              lastModified: "2024-01-10",
-              created: "2023-11-15",
-            },
-            {
-              id: "3",
-              title: "Netflix",
-              username: "johnfamily@netflix.com",
-              password: "netflix789!",
-              url: "https://netflix.com",
-              notes: "Family shared account",
-              lastModified: "2024-01-08",
-              created: "2023-10-20",
-            },
-            {
-              id: "4",
-              title: "Bank Account",
-              username: "john.doe",
-              password: "bankPass123$",
-              url: "https://mybank.com",
-              notes: "Primary checking account",
-              lastModified: "2024-01-05",
-              created: "2023-09-10",
-            },
-            {
-              id: "5",
-              title: "Work VPN",
-              username: "j.doe",
-              password: "vpnAccess789!",
-              notes: "Corporate VPN access credentials",
-              lastModified: "2024-01-03",
-              created: "2023-08-15",
-            },
-          ]);
-          setLoading(false);
-        }, 1000);
+        setLoading(true);
+        setError(null);
+
+        // Get current user ID - replace with your actual auth implementation
+        const userId = await getCurrentUserId();
+
+        // Fetch passwords from the API
+        const response = await PasswordService.getUserPasswords(userId);
+        setPasswords(response.passwords);
       } catch (error) {
         console.error("Error fetching passwords:", error);
+        setError("Failed to load passwords from the server");
+      } finally {
         setLoading(false);
       }
     };
@@ -108,11 +68,17 @@ export const VaultView = () => {
     fetchPasswords();
   }, []);
 
+  const getCurrentUserId = async (): Promise<string> => {
+    const session = await authClient.getSession();
+    if (!session.data?.user.id) return "";
+    return session.data?.user.id; // Replace with actual user ID from your auth system
+  };
+
   const copyUsernameToClipboard = async (username: string, id: string) => {
     try {
       await navigator.clipboard.writeText(username);
       setCopiedUsernameId(id);
-      setTimeout(() => setCopiedUsernameId(null), 2000);
+      setTimeout(() => setCopiedUsernameId(null), 15000);
     } catch (err) {
       console.error("Failed to copy username: ", err);
     }
@@ -148,10 +114,31 @@ export const VaultView = () => {
   const handleDeletePassword = async (id: string) => {
     if (confirm("Are you sure you want to delete this password?")) {
       try {
+        const userId = await getCurrentUserId();
+        await PasswordService.deletePassword(id, userId);
+
+        // Remove from local state
         setPasswords(passwords.filter((p) => p.id !== id));
       } catch (error) {
         console.error("Error deleting password:", error);
+        alert("Failed to delete password");
       }
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userId = await getCurrentUserId();
+      const response = await PasswordService.getUserPasswords(userId);
+      setPasswords(response.passwords);
+    } catch (error) {
+      console.error("Error refreshing passwords:", error);
+      setError("Failed to refresh passwords");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,6 +153,29 @@ export const VaultView = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <Lock className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="flex space-x-3 justify-center">
+            <Button
+              onClick={handleRefresh}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Try Again
+            </Button>
+            <Button onClick={() => router.push("/")} variant="outline">
+              Go to Generator
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -175,10 +185,18 @@ export const VaultView = () => {
             <h1 className="text-3xl font-bold text-gray-900">Password Vault</h1>
             <p className="text-gray-600 mt-2">
               {passwords.length} password{passwords.length !== 1 ? "s" : ""}{" "}
-              stored
+              stored securely
             </p>
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Refresh</span>
+            </Button>
             <Button
               onClick={() => router.push("/")}
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -198,6 +216,7 @@ export const VaultView = () => {
             >
               Sign out
             </Button>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -221,22 +240,22 @@ export const VaultView = () => {
             <div className="col-span-full text-center py-12">
               <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No passwords found
+                {searchTerm ? "No passwords found" : "No passwords yet"}
               </h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm
                   ? "No passwords match your search. Try different keywords."
-                  : "Get started by adding your first password."}
+                  : "Get started by generating and saving your first password."}
               </p>
-              {!searchTerm && (
-                <Button
-                  onClick={() => router.push("/")}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Password
-                </Button>
-              )}
+              <Button
+                onClick={() => router.push("/")}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {searchTerm
+                  ? "Generate New Password"
+                  : "Add Your First Password"}
+              </Button>
             </div>
           ) : (
             filteredPasswords.map((password) => (
@@ -259,7 +278,10 @@ export const VaultView = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          copyUsernameToClipboard(password.username, password.id)
+                          copyUsernameToClipboard(
+                            password.username,
+                            password.id
+                          )
                         }
                         className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"
                       >
@@ -307,16 +329,23 @@ export const VaultView = () => {
                     Password
                   </label>
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 font-mono text-sm">
+                    <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 font-mono text-sm truncate group relative">
                       {showPasswordId === password.id
                         ? password.password
-                        : "•".repeat(12)}
+                        : "•".repeat(Math.min(password.password.length, 12))}
+                      {/* Tooltip on hover for long passwords */}
+                      {showPasswordId === password.id &&
+                        password.password.length > 20 && (
+                          <div className="absolute inset-0 bg-gray-50 rounded-lg px-3 py-2 hidden group-hover:block z-10 shadow-lg border">
+                            {password.password}
+                          </div>
+                        )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => togglePasswordVisibility(password.id)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0"
                     >
                       {showPasswordId === password.id ? (
                         <EyeOff className="h-4 w-4" />
@@ -330,7 +359,7 @@ export const VaultView = () => {
                       onClick={() =>
                         copyPasswordToClipboard(password.password, password.id)
                       }
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0"
                     >
                       {copiedPasswordId === password.id ? (
                         <Check className="h-4 w-4 text-green-600" />

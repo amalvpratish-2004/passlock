@@ -1,21 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Copy, Check, RefreshCw, Save, Lock } from "lucide-react";
+import { Copy, Check, RefreshCw, Save, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-
-interface PasswordItem {
-  id: string;
-  title: string;
-  username: string;
-  password: string;
-  url?: string;
-  notes?: string;
-  lastModified: string;
-  created: string;
-}
+import { PasswordService } from "@/services/passwordServices";
+import { authClient } from "@/lib/auth-client";
 
 interface SavePasswordData {
   title: string;
@@ -40,6 +31,7 @@ export const HomeView = () => {
     url: "",
     notes: "",
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   // Character sets
   const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -122,7 +114,7 @@ export const HomeView = () => {
     }
   };
 
-  const handleSavePassword = () => {
+  const handleSavePassword = async () => {
     if (!saveData.title.trim()) {
       alert("Please enter a title for the password");
       return;
@@ -133,31 +125,39 @@ export const HomeView = () => {
       return;
     }
 
-    // Create new password item
-    const newPasswordItem: PasswordItem = {
-      id: Date.now().toString(),
-      title: saveData.title,
-      username: saveData.username,
-      password: password,
-      url: saveData.url || undefined,
-      notes: saveData.notes || undefined,
-      lastModified: new Date().toISOString(),
-      created: new Date().toISOString(),
-    };
+    try {
+      setIsSaving(true);
 
-    // Here you would typically save to your database
-    console.log("Saving password:", newPasswordItem);
+      // Get current user ID - you'll need to replace this with your actual auth user ID
+      const userId = await getCurrentUserId();
 
-    // Reset form and show success message
-    setSaveData({
-      title: "",
-      username: "",
-      url: "",
-      notes: "",
-    });
-    setShowSaveForm(false);
+      // Save to database using the PasswordService
+      const result = await PasswordService.createPassword({
+        title: saveData.title,
+        username: saveData.username,
+        password: password, // The generated password
+        url: saveData.url,
+        notes: saveData.notes,
+        userId: userId,
+      });
+      console.log(result);
 
-    alert("Password saved successfully!");
+      // Reset form and show success message
+      setSaveData({
+        title: "",
+        username: "",
+        url: "",
+        notes: "",
+      });
+      setShowSaveForm(false);
+
+      alert("Password saved successfully to vault!");
+    } catch (error) {
+      console.error("Error saving password:", error);
+      alert("Failed to save password: " + (error as Error).message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveDataChange = (
@@ -170,6 +170,22 @@ export const HomeView = () => {
     }));
   };
 
+  const closeSaveModal = () => {
+    setShowSaveForm(false);
+    setSaveData({
+      title: "",
+      username: "",
+      url: "",
+      notes: "",
+    });
+  };
+
+  const getCurrentUserId = async (): Promise<string> => {
+    const session = await authClient.getSession();
+    if (!session.data?.user.id) return "";
+    return session.data?.user.id; // Replace with actual user ID from your auth system
+  };
+
   return (
     <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10">
       <Button
@@ -179,11 +195,10 @@ export const HomeView = () => {
         <Lock className="h-4 w-4" />
         <span className="font-medium text-sm">Open Vault</span>
       </Button>
+
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">
-          Passlock
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">Passlock</h1>
         <p className="text-gray-600 text-lg">
           Instantly create strong and secure passwords to keep your account safe
           online.
@@ -255,9 +270,19 @@ export const HomeView = () => {
               {showSaveForm && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
                   <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-fade-in">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">
-                      Save Password
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        Save Password
+                      </h3>
+                      <Button
+                        onClick={closeSaveModal}
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </div>
 
                     <div className="space-y-3">
                       <div>
@@ -319,21 +344,42 @@ export const HomeView = () => {
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
+
+                      {/* Generated Password Preview */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Generated Password
+                        </label>
+                        <div className="font-mono text-sm bg-white rounded px-2 py-1 border break-all">
+                          {password}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex space-x-3 mt-5">
                       <Button
-                        onClick={handleSavePassword}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Save Password
-                      </Button>
-                      <Button
-                        onClick={() => setShowSaveForm(false)}
+                        onClick={closeSaveModal}
                         variant="outline"
                         className="flex-1"
                       >
                         Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSavePassword}
+                        disabled={isSaving}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                      >
+                        {isSaving ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save Password
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
