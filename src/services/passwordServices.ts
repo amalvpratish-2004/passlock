@@ -18,15 +18,22 @@ export interface CreatePasswordData {
   userId: string;
 }
 
+export interface UpdatePasswordData {
+  title?: string;
+  username?: string;
+  password?: string; // Plain password - API will encrypt it if provided
+  url?: string;
+  notes?: string;
+}
+
 export class PasswordService {
   static async createPassword(data: CreatePasswordData): Promise<{ success: boolean; id: string }> {
-    // Send plain password to API - server will encrypt it
     const response = await fetch('/api/passwords', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data), // Send plain password, API handles encryption
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
@@ -45,18 +52,19 @@ export class PasswordService {
       throw new Error(error.error || 'Failed to fetch passwords');
     }
 
-    // API returns already decrypted passwords
     return response.json();
   }
 
-  static async updatePassword(id: string, data: Partial<CreatePasswordData>): Promise<{ success: boolean }> {
-    // Send plain password to API - server will encrypt it if provided
+  static async updatePassword(id: string, userId: string, data: UpdatePasswordData): Promise<PasswordItem> {
     const response = await fetch(`/api/passwords/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...data,
+        userId // Include userId for verification
+      }),
     });
 
     if (!response.ok) {
@@ -64,7 +72,8 @@ export class PasswordService {
       throw new Error(error.error || 'Failed to update password');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.password; // Return the updated password object
   }
 
   static async deletePassword(id: string, userId: string): Promise<{ success: boolean }> {

@@ -14,8 +14,12 @@ import {
   User,
   Check,
   Shield,
+  Edit3,
+  Save,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { PasswordService } from "@/services/passwordServices";
 import { ThemeToggle } from "../theme-toggle";
@@ -38,7 +42,15 @@ interface VaultViewProps {
   twoFactorEnabled: boolean
 }
 
-export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
+interface EditFormData {
+  title: string;
+  username: string;
+  password: string;
+  url: string;
+  notes: string;
+}
+
+export const VaultView = ({userId, twoFactorEnabled}: VaultViewProps) => {
   const router = useRouter();
   const [passwords, setPasswords] = useState<PasswordItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +60,15 @@ export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
   const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<EditFormData>({
+    title: "",
+    username: "",
+    password: "",
+    url: "",
+    notes: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [show2FA, setShow2FA] = useState(false);
   useEffect(() => {
@@ -113,6 +134,75 @@ export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
 
   const toggleNoteExpansion = (id: string) => {
     setExpandedNoteId(expandedNoteId === id ? null : id);
+  };
+
+  const startEditing = (password: PasswordItem) => {
+    setEditingId(password.id);
+    setEditFormData({
+      title: password.title,
+      username: password.username,
+      password: password.password,
+      url: password.url || "",
+      notes: password.notes || "",
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditFormData({
+      title: "",
+      username: "",
+      password: "",
+      url: "",
+      notes: "",
+    });
+  };
+
+  const handleEditFormChange = (field: keyof EditFormData, value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleUpdatePassword = async (id: string) => {
+    if (!editFormData.title.trim() || !editFormData.username.trim()) {
+      alert("Title and username are required");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const userId = await getCurrentUserId();
+      
+      const updatedPassword = await PasswordService.updatePassword(id, userId, {
+        title: editFormData.title,
+        username: editFormData.username,
+        password: editFormData.password,
+        url: editFormData.url || undefined,
+        notes: editFormData.notes || undefined,
+      });
+
+      // Update local state
+      setPasswords(prev => prev.map(p => 
+        p.id === id ? { ...p, ...updatedPassword } : p
+      ));
+
+      setEditingId(null);
+      setEditFormData({
+        title: "",
+        username: "",
+        password: "",
+        url: "",
+        notes: "",
+      });
+
+    } catch (error) {
+      console.error("Error updating password:", error);
+      alert("Failed to update password");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredPasswords = passwords.filter((password) => {
@@ -277,48 +367,118 @@ export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
                       <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-xl">
                         <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <h3 className="font-bold text-gray-800 dark:text-white text-lg leading-tight">
-                        {password.title}
-                      </h3>
+                      {editingId === password.id ? (
+                        <Input
+                          value={editFormData.title}
+                          onChange={(e) => handleEditFormChange("title", e.target.value)}
+                          className="font-bold text-lg border-blue-200 focus:border-blue-500"
+                          placeholder="Title"
+                        />
+                      ) : (
+                        <h3 className="font-bold text-gray-800 dark:text-white text-lg leading-tight">
+                          {password.title}
+                        </h3>
+                      )}
                     </div>
                     <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                      <div className="flex items-center text-gray-600 dark:text-gray-300 flex-1">
-                        <User className="h-4 w-4 mr-2 text-blue-500" />
-                        <span className="truncate font-medium">
-                          {password.username}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          copyUsernameToClipboard(
-                            password.username,
-                            password.id
-                          )
-                        }
-                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
-                      >
-                        {copiedUsernameId === password.id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
+                      {editingId === password.id ? (
+                        <Input
+                          value={editFormData.username}
+                          onChange={(e) => handleEditFormChange("username", e.target.value)}
+                          className="flex-1 border-blue-200 focus:border-blue-500"
+                          placeholder="Username/Email"
+                        />
+                      ) : (
+                        <>
+                          <div className="flex items-center text-gray-600 dark:text-gray-300 flex-1">
+                            <User className="h-4 w-4 mr-2 text-blue-500" />
+                            <span className="truncate font-medium">
+                              {password.username}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              copyUsernameToClipboard(
+                                password.username,
+                                password.id
+                              )
+                            }
+                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
+                          >
+                            {copiedUsernameId === password.id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeletePassword(password.id)}
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors rounded-xl ml-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-1 ml-2">
+                    {editingId === password.id ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUpdatePassword(password.id)}
+                          disabled={isSubmitting}
+                          className="text-green-500 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors rounded-lg"
+                        >
+                          {isSubmitting ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={cancelEditing}
+                          className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors rounded-lg"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditing(password)}
+                          className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeletePassword(password.id)}
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors rounded-xl"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* URL */}
-                {password.url && (
+                {editingId === password.id ? (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Website URL
+                    </label>
+                    <Input
+                      value={editFormData.url}
+                      onChange={(e) => handleEditFormChange("url", e.target.value)}
+                      placeholder="https://example.com"
+                      className="w-full border-blue-200 focus:border-blue-500"
+                    />
+                  </div>
+                ) : password.url && (
                   <div className="mb-4">
                     <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
                       <Globe className="h-4 w-4 mr-2 text-green-500" />
@@ -341,47 +501,74 @@ export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
                     Password
                   </label>
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 rounded-xl px-4 py-3 font-mono text-sm border border-gray-200 dark:border-gray-600 overflow-x-auto scrollbar-hide">
-                      {showPasswordId === password.id
-                        ? password.password
-                        : "•".repeat(Math.min(password.password.length, 12))}
-                    </div>
+                    {editingId === password.id ? (
+                      <Input
+                        type="text"
+                        value={editFormData.password}
+                        onChange={(e) => handleEditFormChange("password", e.target.value)}
+                        className="flex-1 font-mono border-blue-200 focus:border-blue-500"
+                        placeholder="Password"
+                      />
+                    ) : (
+                      <div className="flex-1 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 rounded-xl px-4 py-3 font-mono text-sm border border-gray-200 dark:border-gray-600 overflow-x-auto scrollbar-hide">
+                        {showPasswordId === password.id
+                          ? password.password
+                          : "•".repeat(Math.min(password.password.length, 12))}
+                      </div>
+                    )}
                     <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => togglePasswordVisibility(password.id)}
-                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
-                      >
-                        {showPasswordId === password.id ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          copyPasswordToClipboard(
-                            password.password,
-                            password.id
-                          )
-                        }
-                        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
-                      >
-                        {copiedPasswordId === password.id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
+                      {editingId !== password.id && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => togglePasswordVisibility(password.id)}
+                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
+                          >
+                            {showPasswordId === password.id ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              copyPasswordToClipboard(
+                                password.password,
+                                password.id
+                              )
+                            }
+                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
+                          >
+                            {copiedPasswordId === password.id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Notes */}
-                {password.notes && (
+                {editingId === password.id ? (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={editFormData.notes}
+                      onChange={(e) => handleEditFormChange("notes", e.target.value)}
+                      placeholder="Additional notes..."
+                      rows={3}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 bg-transparent"
+                    />
+                  </div>
+                ) : password.notes && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-gray-600 dark:text-gray-300 mb-2">
                       <div className="flex items-center">

@@ -166,7 +166,7 @@ export const LoginForm = () => {
         )}
       </div>
 
-      {/* Remember Me & Forgot Password */}
+      {/* Remember Me */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <input
@@ -181,15 +181,6 @@ export const LoginForm = () => {
           >
             Remember me
           </label>
-        </div>
-
-        <div className="text-sm">
-          <a
-            href="#"
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
-            Forgot your password?
-          </a>
         </div>
       </div>
 
