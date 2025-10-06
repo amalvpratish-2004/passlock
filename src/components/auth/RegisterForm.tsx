@@ -25,9 +25,6 @@ const formSchema = z
     confirmPassword: z
       .string()
       .min(1, { message: "Please confirm your password" }),
-    terms: z.boolean().refine((val) => val === true, {
-      message: "You must accept the terms and conditions",
-    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -47,7 +44,6 @@ export const RegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      terms: false,
     },
   });
 
@@ -306,12 +302,6 @@ export const RegisterForm = () => {
                     </p>
                   )}
                 </div>
-
-                {form.formState.errors.terms && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {form.formState.errors.terms.message}
-                  </p>
-                )}
 
                 {/* Submit Button */}
                 <button
