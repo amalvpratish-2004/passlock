@@ -133,7 +133,7 @@ export const HomeView = () => {
       const userId = await getCurrentUserId();
 
       // Save to database using the PasswordService
-      const result = await PasswordService.createPassword({
+      await PasswordService.createPassword({
         title: saveData.title,
         username: saveData.username,
         password: password, // The generated password
@@ -141,7 +141,6 @@ export const HomeView = () => {
         notes: saveData.notes,
         userId: userId,
       });
-      console.log(result);
 
       // Reset form and show success message
       setSaveData({

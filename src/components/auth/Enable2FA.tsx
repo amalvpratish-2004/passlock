@@ -75,14 +75,12 @@ export const Enable2FA = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await authClient.twoFactor.verifyTotp({
+      const { error } = await authClient.twoFactor.verifyTotp({
         code, // required 6-digit code from user's app
         trustDevice: true, // optional: remember this device
       });
 
       if (error) throw new Error(error.message);
-
-      console.log("2FA setup successful:", data);
       setStep("success");
       
       // Auto-redirect after 3 seconds

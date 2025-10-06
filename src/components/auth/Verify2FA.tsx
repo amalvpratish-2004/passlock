@@ -23,7 +23,7 @@ export const Verify2FA = ({ email, onBack }: Verify2FAProps) => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await authClient.twoFactor.verifyTotp({
+      const { error } = await authClient.twoFactor.verifyTotp({
         code,
         trustDevice: true,
       });
@@ -35,7 +35,6 @@ export const Verify2FA = ({ email, onBack }: Verify2FAProps) => {
         throw new Error(error.message);
       }
 
-      console.log("2FA verification successful:", data);
       router.push("/"); // Redirect after successful verification
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
