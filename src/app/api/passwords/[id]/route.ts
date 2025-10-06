@@ -4,12 +4,12 @@ import { connectToDatabase } from '@/lib/mongodb';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // params is now a Promise
 ) {
   let client;
   
   try {
-    const { id } = params;
+    const { id } = await params; // Await the params to get the actual values
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
