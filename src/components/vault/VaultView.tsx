@@ -13,14 +13,14 @@ import {
   FileText,
   User,
   Check,
-  RefreshCw,
-  Shield 
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { PasswordService } from "@/services/passwordServices";
 import { ThemeToggle } from "../theme-toggle";
 import { SearchBar } from "./SearchBar";
+import { getAccountProvider } from "@/services/accountServices";
 
 interface PasswordItem {
   id: string;
@@ -33,7 +33,12 @@ interface PasswordItem {
   created: string;
 }
 
-export const VaultView = () => {
+interface VaultViewProps {
+  userId: string,
+  twoFactorEnabled: boolean
+}
+
+export const VaultView = ({userId, twoFactorEnabled}:VaultViewProps) => {
   const router = useRouter();
   const [passwords, setPasswords] = useState<PasswordItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +48,17 @@ export const VaultView = () => {
   const [copiedPasswordId, setCopiedPasswordId] = useState<string | null>(null);
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [show2FA, setShow2FA] = useState(false);
+  useEffect(() => {
+    const fun = async () => {
+      const provider = await getAccountProvider(userId);
+      if (provider == "credential" && !twoFactorEnabled) {
+        setShow2FA(true);
+      }
+    };
+    fun();
+  }, [userId, twoFactorEnabled]);
 
   useEffect(() => {
     const fetchPasswords = async () => {
@@ -68,7 +84,7 @@ export const VaultView = () => {
   const getCurrentUserId = async (): Promise<string> => {
     const session = await authClient.getSession();
     if (!session.data?.user.id) return "";
-    return session.data?.user.id; 
+    return session.data?.user.id;
   };
 
   const copyUsernameToClipboard = async (username: string, id: string) => {
@@ -157,11 +173,7 @@ export const VaultView = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <div className="flex space-x-3 justify-center">
-            <Button
-              onClick={handleRefresh}
-            >
-              Try Again
-            </Button>
+            <Button onClick={handleRefresh}>Try Again</Button>
             <Button onClick={() => router.push("/")} variant="outline">
               Go to Generator
             </Button>
@@ -192,16 +204,16 @@ export const VaultView = () => {
           </div>
           <div className="flex items-center space-x-3 mt-4 sm:mt-0">
             <ThemeToggle />
-            
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              className="flex items-center space-x-2 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/50 transition-colors"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>Refresh</span>
-            </Button>
-            
+
+            {show2FA && (
+              <Button 
+                onClick={() => router.push("/2fa/enable")}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"  
+              >
+                Enable 2FA
+              </Button>
+            )}
+
             <Button
               onClick={() => router.push("/")}
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
@@ -209,7 +221,7 @@ export const VaultView = () => {
               <Plus className="h-4 w-4 mr-2" />
               Generate New
             </Button>
-            
+
             <Button
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() =>
@@ -226,7 +238,7 @@ export const VaultView = () => {
         </div>
 
         {/* Search */}
-        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
         {/* Passwords Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -272,13 +284,18 @@ export const VaultView = () => {
                     <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
                       <div className="flex items-center text-gray-600 dark:text-gray-300 flex-1">
                         <User className="h-4 w-4 mr-2 text-blue-500" />
-                        <span className="truncate font-medium">{password.username}</span>
+                        <span className="truncate font-medium">
+                          {password.username}
+                        </span>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          copyUsernameToClipboard(password.username, password.id)
+                          copyUsernameToClipboard(
+                            password.username,
+                            password.id
+                          )
                         }
                         className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
                       >
@@ -313,7 +330,7 @@ export const VaultView = () => {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 truncate block bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2 transition-colors font-medium"
                     >
-                      {password.url.replace(/(^\w+:|^)\/\//, '')}
+                      {password.url.replace(/(^\w+:|^)\/\//, "")}
                     </a>
                   </div>
                 )}
@@ -346,7 +363,10 @@ export const VaultView = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          copyPasswordToClipboard(password.password, password.id)
+                          copyPasswordToClipboard(
+                            password.password,
+                            password.id
+                          )
                         }
                         className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors rounded-lg"
                       >
@@ -392,7 +412,8 @@ export const VaultView = () => {
                 {/* Footer */}
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
                   <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    Modified: {new Date(password.lastModified).toLocaleDateString()}
+                    Modified:{" "}
+                    {new Date(password.lastModified).toLocaleDateString()}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                     Created: {new Date(password.created).toLocaleDateString()}

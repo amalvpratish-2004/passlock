@@ -13,9 +13,12 @@ const Page = async () => {
     redirect("/signin");
   }
 
+  const userId = session.session.userId;
+  const twoFactorEnabled = session.user.twoFactorEnabled;
+
   return (
     <div>
-        <VaultView />
+        <VaultView userId={userId} twoFactorEnabled={twoFactorEnabled || false}/>
     </div>
   );
 };

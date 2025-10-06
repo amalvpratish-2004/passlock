@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { HomeView } from "@/components/home/HomeView";
+import { Enable2FA } from "@/components/auth/Enable2FA";
 
 const page = async () => {
   const session = await auth.api.getSession({
@@ -14,7 +14,7 @@ const page = async () => {
   }
 
   return(
-    <HomeView/>
+    <Enable2FA />
   );
 };
 

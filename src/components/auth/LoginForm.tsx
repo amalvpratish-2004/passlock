@@ -12,9 +12,10 @@ import { Button } from "../ui/button";
 
 import GitHubIcon from '@mui/icons-material/GitHub';
 import GoogleIcon from '@mui/icons-material/Google';
+import { Verify2FA } from "./Verify2FA";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
+  email: z.email({ message: "Please enter a valid email address" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
 
@@ -22,6 +23,8 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,17 +38,23 @@ export const LoginForm = () => {
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     setError(null);
     setPending(true);
+    setUserEmail(data.email); // Store email for 2FA context
 
     authClient.signIn.email(
       {
         email: data.email,
         password: data.password,
-        callbackURL: "/",
       },
       {
-        onSuccess: () => {
+        onSuccess: (context) => {
           setPending(false);
-          router.push("/");
+          // Check if 2FA is required
+          if (context.data?.twoFactorRedirect) {
+            setShow2FA(true); // Show 2FA verification component
+          } else {
+            // Regular login successful
+            router.push("/");
+          }
         },
         onError: (ctx) => {
           setError(ctx.error.message);
@@ -75,6 +84,11 @@ export const LoginForm = () => {
       }
     );
   };
+
+  // If 2FA is required, show the verification component
+  if (show2FA) {
+    return <Verify2FA email={userEmail} onBack={() => setShow2FA(false)} />;
+  }
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
