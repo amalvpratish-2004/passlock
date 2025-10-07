@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { connectToDatabase } from '@/lib/mongodb';
-import { encryptionService } from '@/lib/encryption'; // Server-side only!
 
 interface UpdatePasswordBody {
   title?: string;
@@ -49,21 +48,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Password not found' }, { status: 404 });
     }
 
-    // Prepare update data
+    // Prepare update data - use encrypted data directly from client
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {
-      updatedAt: new Date() // Use updatedAt like your other routes
+      updatedAt: new Date()
     };
 
-    if (title !== undefined) updateData.title = title;
-    if (username !== undefined) updateData.username = username;
-    if (url !== undefined) updateData.url = url;
-    if (notes !== undefined) updateData.notes = notes;
-
-    // Handle password encryption if provided
-    if (password !== undefined) {
-      updateData.password = await encryptionService.encryptPasswordForStorage(password);
-    }
+    if (title !== undefined) updateData.title = title;        // Already encrypted
+    if (username !== undefined) updateData.username = username; // Already encrypted
+    if (password !== undefined) updateData.password = password; // Already encrypted
+    if (url !== undefined) updateData.url = url;              // Already encrypted
+    if (notes !== undefined) updateData.notes = notes;        // Already encrypted
 
     // Update the password
     const result = await db.collection('passwords').findOneAndUpdate(
@@ -75,7 +70,7 @@ export async function PUT(
         $set: updateData 
       },
       { 
-        returnDocument: 'after' // Return the updated document
+        returnDocument: 'after'
       }
     );
 
@@ -83,16 +78,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to update password' }, { status: 500 });
     }
 
-    // Decrypt the password for the response (consistent with GET route)
-    const decryptedPassword = await encryptionService.decryptPasswordFromStorage(result.password);
-
+    // Return the encrypted data as-is - client will decrypt it
     const updatedPassword = {
       id: result._id.toString(),
-      title: result.title,
-      username: result.username,
-      password: decryptedPassword, // Send decrypted to client
-      url: result.url,
-      notes: result.notes,
+      title: result.title,        // Encrypted - client will decrypt
+      username: result.username,  // Encrypted - client will decrypt
+      password: result.password,  // Encrypted - client will decrypt
+      url: result.url,            // Encrypted - client will decrypt
+      notes: result.notes,        // Encrypted - client will decrypt
       lastModified: result.updatedAt,
       created: result.createdAt
     };

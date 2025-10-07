@@ -130,8 +130,12 @@ export const HomeView = () => {
       setIsSaving(true);
 
       const userId = await getCurrentUserId();
+      if (!userId) {
+        alert("User not authenticated");
+        return;
+      }
 
-      // Save to database using the PasswordService
+      // Save to database using the updated PasswordService
       await PasswordService.createPassword({
         title: saveData.title,
         username: saveData.username,
@@ -181,8 +185,10 @@ export const HomeView = () => {
 
   const getCurrentUserId = async (): Promise<string> => {
     const session = await authClient.getSession();
-    if (!session.data?.user.id) return "";
-    return session.data?.user.id; 
+    if (!session.data?.user.id) {
+      throw new Error("User not authenticated");
+    }
+    return session.data.user.id; 
   };
 
   return (

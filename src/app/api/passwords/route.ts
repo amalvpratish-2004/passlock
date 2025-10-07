@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import { encryptionService } from '@/lib/encryption'; // Server-side only!
 
 export async function POST(request: NextRequest) {
   let client;
@@ -21,20 +20,13 @@ export async function POST(request: NextRequest) {
     const { db, client: connectedClient } = await connectToDatabase();
     client = connectedClient;
 
-    // Encrypt the password on the server
-    const encryptedPassword = await encryptionService.encryptPasswordForStorage(password);
-    const encryptedTitle = await encryptionService.encryptPasswordForStorage(title);
-    const encryptedUsername = await encryptionService.encryptPasswordForStorage(username);
-    const encryptedUrl = url ? await encryptionService.encryptPasswordForStorage(url) : null;
-    const encryptedNotes = notes ? await encryptionService.encryptPasswordForStorage(notes) : null;
-
-    // Create password document with encrypted password
+    // Create password document with ALREADY ENCRYPTED data from client
     const passwordDoc = {
-      title: encryptedTitle,
-      username : encryptedUsername,
-      password: encryptedPassword, 
-      url: encryptedUrl,
-      notes: encryptedNotes,
+      title,        // Already encrypted by client
+      username,     // Already encrypted by client
+      password,     // Already encrypted by client
+      url: url || null,     // Already encrypted by client (or null)
+      notes: notes || null, // Already encrypted by client (or null)
       userId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -84,42 +76,19 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .toArray();
 
-    // Decrypt passwords on the server before sending to client
-    const decryptedPasswords = await Promise.all(
-      passwords.map(async (doc) => {
-        try {
-          const decryptedPassword = await encryptionService.decryptPasswordFromStorage(doc.password);
-          const decryptedTitle = await encryptionService.decryptPasswordFromStorage(doc.title);
-          const decryptedUsername = await encryptionService.decryptPasswordFromStorage(doc.username);
-          const decryptedUrl = doc.url ? await encryptionService.decryptPasswordFromStorage(doc.url) : null;
-          const decryptedNotes = doc.notes ? await encryptionService.decryptPasswordFromStorage(doc.notes) : null;
-          return {
-            id: doc._id.toString(),
-            title: decryptedTitle,
-            username: decryptedUsername,
-            password: decryptedPassword, // Send decrypted to client
-            url: decryptedUrl,
-            notes: decryptedNotes,
-            lastModified: doc.updatedAt,
-            created: doc.createdAt,
-          };
-        } catch (error) {
-          console.error(`Failed to decrypt password for ${doc.title}:`, error);
-          return {
-            id: doc._id.toString(),
-            title: doc.title,
-            username: doc.username,
-            password: '*** DECRYPTION FAILED ***',
-            url: doc.url,
-            notes: doc.notes,
-            lastModified: doc.updatedAt,
-            created: doc.createdAt,
-          };
-        }
-      })
-    );
+    // Return the encrypted data as-is - client will decrypt it
+    const formattedPasswords = passwords.map(password => ({
+      id: password._id.toString(),
+      title: password.title,        // Encrypted - client will decrypt
+      username: password.username,  // Encrypted - client will decrypt
+      password: password.password,  // Encrypted - client will decrypt
+      url: password.url,            // Encrypted - client will decrypt
+      notes: password.notes,        // Encrypted - client will decrypt
+      lastModified: password.updatedAt,
+      created: password.createdAt
+    }));
 
-    return NextResponse.json({ passwords: decryptedPasswords });
+    return NextResponse.json({ passwords: formattedPasswords });
 
   } catch (error) {
     console.error('Error fetching passwords:', error);
