@@ -78,7 +78,7 @@ export const HomeView = () => {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(password).then(() => {
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setTimeout(() => setIsCopied(false), 15000);
     });
   };
 
@@ -129,14 +129,13 @@ export const HomeView = () => {
     try {
       setIsSaving(true);
 
-      // Get current user ID - you'll need to replace this with your actual auth user ID
       const userId = await getCurrentUserId();
 
       // Save to database using the PasswordService
       await PasswordService.createPassword({
         title: saveData.title,
         username: saveData.username,
-        password: password, // The generated password
+        password: password, 
         url: saveData.url,
         notes: saveData.notes,
         userId: userId,
@@ -183,38 +182,50 @@ export const HomeView = () => {
   const getCurrentUserId = async (): Promise<string> => {
     const session = await authClient.getSession();
     if (!session.data?.user.id) return "";
-    return session.data?.user.id; // Replace with actual user ID from your auth system
+    return session.data?.user.id; 
   };
 
   return (
-    <div className="py-10 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-950 dark:to-indigo-900 p-4 transition-colors duration-300 min-h-screen">
+    <div className="py-10 bg-gradient-to-br from-[#faf9fe] via-[#f2f0ff] to-[#e8e6f9] dark:from-[#2a243a] dark:via-[#3b315a] dark:to-[#4a3f8c] p-4 transition-colors duration-300 min-h-screen">
       <div className="max-w-6xl mx-auto">
         {/* Header with Vault Button */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-[#7b68ee] to-[#a18aff] rounded-2xl shadow-lg">
               <Shield className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#7b68ee] to-[#a18aff] dark:from-[#b3a7f9] dark:to-[#dcd6f7] bg-clip-text text-transparent">
                 Passlock
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
+              <p className="text-[#5a4ea8] dark:text-[#c5bdf7] mt-2 text-lg">
                 Instantly create strong and secure passwords to keep your
                 account safe online.
               </p>
             </div>
           </div>
 
-          <div className="flex space-x-10">
+          <div className="flex space-x-3">
             <Button
               onClick={() => router.push("/vault")}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl px-6 py-3 flex items-center space-x-1 transition-all duration-300 hover:scale-102 rounded-xl"
+              className="bg-gradient-to-r from-[#7b68ee] to-[#b3a7f9] hover:from-[#6a5bbf] hover:to-[#9d8fdf] text-white shadow-lg hover:shadow-xl px-6 py-3 flex items-center space-x-1 transition-all duration-300 hover:scale-102 rounded-xl cursor-pointer"
             >
               <Lock className="h-5 w-5" />
               <span className="font-medium p-1">Open Vault</span>
             </Button>
             <ThemeToggle />
+            <Button
+              className="bg-gradient-to-r from-[#7b68ee] to-[#b3a7f9] hover:from-[#6a5bbf] hover:to-[#9d8fdf] text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={() =>
+                authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => router.push("/signin"),
+                  },
+                })
+              }
+            >
+              Sign out
+            </Button>
           </div>
         </div>
 
@@ -222,9 +233,9 @@ export const HomeView = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Side - Generated Password */}
           <div className="lg:flex-1">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-white/20 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+            <div className="bg-[#faf9fe] dark:bg-[#2a243a] backdrop-blur-sm rounded-2xl p-8 border border-[#e8e6f9] dark:border-[#3b315a] shadow-lg hover:shadow-xl transition-all duration-300 h-full">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+                <h2 className="text-2xl font-bold text-[#4a3f8c] dark:text-[#dcd6f7] mb-3">
                   Generated Password
                 </h2>
                 <div className="flex items-center justify-center space-x-2 mb-4">
@@ -236,8 +247,8 @@ export const HomeView = () => {
               </div>
 
               {/* Password Display */}
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 rounded-xl p-6 border border-gray-200 dark:border-gray-600 mb-6 transition-all duration-300 hover:shadow-md">
-                <div className="font-mono text-2xl font-bold text-gray-800 dark:text-gray-200 text-center break-all leading-relaxed">
+              <div className="bg-gradient-to-r from-[#f6f4ff] to-[#e8e6f9] dark:from-[#3b315a] dark:to-[#4a3f8c] rounded-xl p-6 border border-[#dcd6f7] dark:border-[#5a4a8a] mb-6 transition-all duration-300 hover:shadow-md">
+                <div className="font-mono text-2xl font-bold text-[#4a3f8c] dark:text-[#e8e6f9] text-center break-all leading-relaxed">
                   {password}
                 </div>
               </div>
@@ -247,17 +258,17 @@ export const HomeView = () => {
                 <Button
                   onClick={generatePassword}
                   variant="outline"
-                  className="flex-1 flex items-center justify-center space-x-2 py-4 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/50 transition-all duration-300 rounded-xl"
+                  className="flex-1 flex items-center justify-center space-x-2 py-4 border-[#dcd6f7] text-[#7b68ee] hover:bg-[#f6f4ff] dark:border-[#5a4a8a] dark:text-[#b3a7f9] dark:hover:bg-[#3b315a] transition-all duration-300 rounded-xl cursor-pointer"
                 >
                   <RefreshCw className="h-5 w-5" />
                   <span className="font-medium">Regenerate</span>
                 </Button>
                 <Button
                   onClick={copyToClipboard}
-                  className={`flex-1 flex items-center justify-center space-x-2 py-4 rounded-xl transition-all duration-300 ${
+                  className={`flex-1 flex items-center justify-center space-x-2 py-4 rounded-xl transition-all duration-15000 ${
                     isCopied
-                      ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                      : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                      ? "bg-gradient-to-r from-[#82ab7d] to-[#82ab7d] hover:from-[#7fa97a] hover:to-[#7fa97a]"
+                      : "bg-gradient-to-r from-[#82ab7d] to-[#82ab7d] hover:from-[#7fa97a] hover:to-[#7fa97a] cursor-pointer"
                   } text-white shadow-lg hover:shadow-xl hover:scale-102`}
                 >
                   {isCopied ? (
@@ -272,10 +283,10 @@ export const HomeView = () => {
               </div>
 
               {/* Save Password Section */}
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+              <div className="mt-8 pt-6 border-t border-[#dcd6f7] dark:border-[#5a4a8a]">
                 <Button
                   onClick={() => setShowSaveForm(true)}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-102"
+                  className="w-full bg-gradient-to-r from-[#7b68ee] to-[#b3a7f9] hover:from-[#6a5bbf] hover:to-[#9d8fdf] text-white py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-102 cursor-pointer"
                 >
                   <Save className="h-5 w-5 mr-2" />
                   <span className="font-medium">Save Password to Vault</span>
@@ -286,17 +297,17 @@ export const HomeView = () => {
 
           {/* Right Side - Settings */}
           <div className="lg:flex-1">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-white/20 dark:border-gray-700/50 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <div className="bg-[#faf9fe] dark:bg-[#2a243a] backdrop-blur-sm rounded-2xl p-8 border border-[#e8e6f9] dark:border-[#3b315a] shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+              <h2 className="text-2xl font-bold text-[#4a3f8c] dark:text-[#dcd6f7] mb-6 text-center">
                 Password Settings
               </h2>
 
               {/* Length Slider */}
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
-                  <label className="text-lg font-semibold text-gray-800 dark:text-white">
+                  <label className="text-lg font-semibold text-[#4a3f8c] dark:text-[#dcd6f7]">
                     Password length:{" "}
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">
+                    <span className="text-[#7b68ee] dark:text-[#b3a7f9] font-bold">
                       {length}
                     </span>
                   </label>
@@ -307,14 +318,14 @@ export const HomeView = () => {
                   max="32"
                   value={length}
                   onChange={(e) => handleLengthChange(parseInt(e.target.value))}
-                  className="w-full h-3 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800 rounded-lg appearance-none cursor-pointer slider transition-all duration-300"
+                  className="w-full h-3 bg-gradient-to-r from-[#dcd6f7] to-[#e8e6f9] dark:from-[#5a4a8a] dark:to-[#6a5bbf] rounded-lg appearance-none cursor-pointer slider transition-all duration-300"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
+                    background: `linear-gradient(to right, #82ab7d 0%, #82ab7d ${
                       ((length - 4) / 28) * 100
-                    }%, #e5e7eb ${((length - 4) / 28) * 100}%, #e5e7eb 100%)`,
+                    }%, #e8e6f9 ${((length - 4) / 28) * 100}%, #e8e6f9 100%)`,
                   }}
                 />
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                <div className="flex justify-between text-sm text-[#7b68ee] dark:text-[#b3a7f9] mt-2 font-medium">
                   <span>4</span>
                   <span>32</span>
                 </div>
@@ -322,86 +333,86 @@ export const HomeView = () => {
 
               {/* Character Options */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-[#4a3f8c] dark:text-[#dcd6f7] mb-4">
                   Characters used:
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Uppercase */}
-                  <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-all duration-300 bg-white/50 dark:bg-gray-700/50 group">
+                  <label className="flex items-center space-x-3 p-4 border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-xl hover:bg-[#f6f4ff] dark:hover:bg-[#3b315a] cursor-pointer transition-all duration-300 bg-white/50 dark:bg-[#3b315a]/50 group">
                     <input
                       type="checkbox"
                       checked={includeUppercase}
                       onChange={(e) =>
                         handleCharacterTypeChange("uppercase", e.target.checked)
                       }
-                      className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 transition-colors"
+                      className="h-5 w-5 text-[#7b68ee] rounded focus:ring-[#7b68ee] transition-colors"
                     />
                     <div>
-                      <span className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <span className="font-bold text-[#4a3f8c] dark:text-[#e8e6f9] group-hover:text-[#7b68ee] dark:group-hover:text-[#b3a7f9] transition-colors">
                         ABC
                       </span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-[#7b68ee] dark:text-[#b3a7f9]">
                         Uppercase letters
                       </p>
                     </div>
                   </label>
 
                   {/* Lowercase */}
-                  <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer transition-all duration-300 bg-white/50 dark:bg-gray-700/50 group">
+                  <label className="flex items-center space-x-3 p-4 border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-xl hover:bg-[#f6f4ff] dark:hover:bg-[#3b315a] cursor-pointer transition-all duration-300 bg-white/50 dark:bg-[#3b315a]/50 group">
                     <input
                       type="checkbox"
                       checked={includeLowercase}
                       onChange={(e) =>
                         handleCharacterTypeChange("lowercase", e.target.checked)
                       }
-                      className="h-5 w-5 text-green-600 rounded focus:ring-green-500 transition-colors"
+                      className="h-5 w-5 text-[#7b68ee] rounded focus:ring-[#7b68ee] transition-colors"
                     />
                     <div>
-                      <span className="font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                      <span className="font-bold text-[#4a3f8c] dark:text-[#e8e6f9] group-hover:text-[#7b68ee] dark:group-hover:text-[#b3a7f9] transition-colors">
                         abc
                       </span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-[#7b68ee] dark:text-[#b3a7f9]">
                         Lowercase letters
                       </p>
                     </div>
                   </label>
 
                   {/* Numbers */}
-                  <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-all duration-300 bg-white/50 dark:bg-gray-700/50 group">
+                  <label className="flex items-center space-x-3 p-4 border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-xl hover:bg-[#f6f4ff] dark:hover:bg-[#3b315a] cursor-pointer transition-all duration-300 bg-white/50 dark:bg-[#3b315a]/50 group">
                     <input
                       type="checkbox"
                       checked={includeNumbers}
                       onChange={(e) =>
                         handleCharacterTypeChange("numbers", e.target.checked)
                       }
-                      className="h-5 w-5 text-purple-600 rounded focus:ring-purple-500 transition-colors"
+                      className="h-5 w-5 text-[#7b68ee] rounded focus:ring-[#7b68ee] transition-colors"
                     />
                     <div>
-                      <span className="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      <span className="font-bold text-[#4a3f8c] dark:text-[#e8e6f9] group-hover:text-[#7b68ee] dark:group-hover:text-[#b3a7f9] transition-colors">
                         123
                       </span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-[#7b68ee] dark:text-[#b3a7f9]">
                         Numbers
                       </p>
                     </div>
                   </label>
 
                   {/* Symbols */}
-                  <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 cursor-pointer transition-all duration-300 bg-white/50 dark:bg-gray-700/50 group">
+                  <label className="flex items-center space-x-3 p-4 border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-xl hover:bg-[#f6f4ff] dark:hover:bg-[#3b315a] cursor-pointer transition-all duration-300 bg-white/50 dark:bg-[#3b315a]/50 group">
                     <input
                       type="checkbox"
                       checked={includeSymbols}
                       onChange={(e) =>
                         handleCharacterTypeChange("symbols", e.target.checked)
                       }
-                      className="h-5 w-5 text-orange-600 rounded focus:ring-orange-500 transition-colors"
+                      className="h-5 w-5 text-[#7b68ee] rounded focus:ring-[#7b68ee] transition-colors"
                     />
                     <div>
-                      <span className="font-bold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                      <span className="font-bold text-[#4a3f8c] dark:text-[#e8e6f9] group-hover:text-[#7b68ee] dark:group-hover:text-[#b3a7f9] transition-colors">
                         @#$%
                       </span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-[#7b68ee] dark:text-[#b3a7f9]">
                         Symbols
                       </p>
                     </div>

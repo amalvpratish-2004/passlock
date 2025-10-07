@@ -13,7 +13,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="w-auto px-3 h-9"
+      className="w-auto px-3 h-9 cursor-pointer"
     >
       <div className="flex items-center justify-center space-x-2">
         <div className="relative w-4 h-4">

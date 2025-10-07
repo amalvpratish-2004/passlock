@@ -98,7 +98,7 @@ export const RegisterForm = () => {
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
         <div className="flex flex-col lg:flex-row">
           {/* Left Column - Brand Section */}
-          <div className="lg:w-2/5 bg-gradient-to-br from-blue-500 to-purple-600 px-8 lg:px-12 flex flex-col justify-center items-center text-white">
+          <div className="lg:w-2/5 bg-gradient-to-br from-[#7b68ee] to-[#a18aff] px-8 lg:px-12 flex flex-col justify-center items-center text-white">
             <div className="flex flex-col items-center text-center space-y-6">
               {/* Shield Icon */}
               <div className="p-4 bg-white/20 rounded-2xl shadow-lg backdrop-blur-sm">
@@ -109,8 +109,7 @@ export const RegisterForm = () => {
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold">Passlock</h1>
                 <p className="text-blue-100 text-lg leading-relaxed">
-                  Secure your digital life with enterprise-grade password
-                  management
+                  Secure and safe password manager
                 </p>
               </div>
             </div>
@@ -120,10 +119,10 @@ export const RegisterForm = () => {
             <div className="max-w-md mx-auto">
               {/* Form Header */}
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#4a3f8c] dark:text-[#dcd6f7] mb-2">
                   Create Account
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-[#7b68ee] dark:text-[#b3a7f9]">
                   Sign up to start securing your passwords
                 </p>
               </div>
@@ -137,10 +136,10 @@ export const RegisterForm = () => {
                     variant="destructive"
                     className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                   >
-                    <AlertTitle className="text-red-800 dark:text-red-400">
+                    <AlertTitle className="text-[#7b68ee] dark:text-[#b3a7f9]">
                       Error
                     </AlertTitle>
-                    <p className="text-red-700 dark:text-red-400">{error}</p>
+                    <p className="text-[#6a5bbf] dark:text-[#c5bdf7]">{error}</p>
                   </Alert>
                 )}
 
@@ -152,7 +151,7 @@ export const RegisterForm = () => {
                       type="button"
                       disabled={pending}
                       onClick={() => onSocial("github")}
-                      className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white/50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex items-center justify-center gap-2 py-3 border border-[#dcd6f7] dark:border-[#5a4a8a] bg-white/70 dark:bg-[#3b315a] text-[#4a3f8c] dark:text-[#e8e6f9] hover:bg-[#f2f0ff] dark:hover:bg-[#45386a] rounded-lg transition-all cursor-pointer"
                     >
                       <GitHubIcon />
                       GitHub
@@ -163,7 +162,7 @@ export const RegisterForm = () => {
                       type="button"
                       disabled={pending}
                       onClick={() => onSocial("google")}
-                      className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white/50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex items-center justify-center gap-2 py-3 border border-[#dcd6f7] dark:border-[#5a4a8a] bg-white/70 dark:bg-[#3b315a] text-[#4a3f8c] dark:text-[#e8e6f9] hover:bg-[#f2f0ff] dark:hover:bg-[#45386a] rounded-lg transition-all cursor-pointer"
                     >
                       <GoogleIcon />
                       Google
@@ -173,7 +172,7 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <div className="w-full border-t border-gray-300 dark:border-gray-600 py-1" />
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-transparent text-gray-500 dark:text-gray-400">
+                      <span className="text-[#9d8fdf] dark:text-[#b3a7f9]">
                         Or register with email
                       </span>
                     </div>
@@ -184,20 +183,20 @@ export const RegisterForm = () => {
                 <div>
                   <label
                     htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Full Name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
+                      <User className="h-5 w-5 text-[#9d8fdf]" />
                     </div>
                     <Input
                       id="name"
                       type="text"
                       required
                       {...form.register("name")}
-                      className="block w-full pl-10 pr-3 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-3 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -212,20 +211,20 @@ export const RegisterForm = () => {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-[#9d8fdf]" />
                     </div>
                     <Input
                       id="email"
                       type="email"
                       required
                       {...form.register("email")}
-                      className="block w-full pl-10 pr-3 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-3 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -240,25 +239,25 @@ export const RegisterForm = () => {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-[#9d8fdf]" />
                     </div>
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       required
                       {...form.register("password")}
-                      className="block w-full pl-10 pr-10 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-3 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Create a password"
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
@@ -279,20 +278,20 @@ export const RegisterForm = () => {
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Confirm Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-[#9d8fdf]" />
                     </div>
                     <Input
                       id="confirmPassword"
                       type={showPassword ? "text" : "password"}
                       required
                       {...form.register("confirmPassword")}
-                      className="block w-full pl-10 pr-10 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-3 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Confirm your password"
                     />
                   </div>
@@ -307,7 +306,7 @@ export const RegisterForm = () => {
                 <button
                   type="submit"
                   disabled={pending}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-3 rounded-lg font-medium text-white bg-gradient-to-r from-[#7b68ee] to-[#b3a7f9] hover:from-[#6a5bbf] hover:to-[#9d8fdf] focus:ring-2 focus:ring-[#b3a7f9] focus:outline-none transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {pending ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -323,7 +322,7 @@ export const RegisterForm = () => {
                   Already have an account?{" "}
                   <Link
                     href="/signin"
-                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    className="font-semibold text-[#5a4ea8] hover:text-[#7b68ee] dark:text-[#dcd6f7] dark:hover:text-[#b3a7f9] transition-colors"
                   >
                     Sign in
                   </Link>

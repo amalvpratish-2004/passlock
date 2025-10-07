@@ -16,7 +16,7 @@ import GoogleIcon from "@mui/icons-material/Google";
 import { Verify2FA } from "./Verify2FA";
 
 const formSchema = z.object({
-  email: z.email({ message: "Please enter a valid email address" }),
+  email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
 
@@ -30,16 +30,13 @@ export const LoginForm = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     setError(null);
     setPending(true);
-    setUserEmail(data.email); // Store email for 2FA context
+    setUserEmail(data.email);
 
     authClient.signIn.email(
       {
@@ -47,36 +44,10 @@ export const LoginForm = () => {
         password: data.password,
       },
       {
-        onSuccess: (context) => {
+        onSuccess: (ctx) => {
           setPending(false);
-          // Check if 2FA is required
-          if (context.data?.twoFactorRedirect) {
-            setShow2FA(true); // Show 2FA verification component
-          } else {
-            // Regular login successful
-            router.push("/");
-          }
-        },
-        onError: (ctx) => {
-          setError(ctx.error.message);
-          setPending(false);
-        },
-      }
-    );
-  };
-
-  const onSocial = (provider: "github" | "google") => {
-    setError(null);
-    setPending(true);
-
-    authClient.signIn.social(
-      {
-        provider: provider,
-        callbackURL: "/",
-      },
-      {
-        onSuccess: () => {
-          setPending(false);
+          if (ctx.data?.twoFactorRedirect) setShow2FA(true);
+          else router.push("/");
         },
         onError: ({ error }) => {
           setError(error.message);
@@ -86,206 +57,162 @@ export const LoginForm = () => {
     );
   };
 
-  // If 2FA is required, show the verification component
+  const onSocial = (provider: "github" | "google") => {
+    setError(null);
+    setPending(true);
+    authClient.signIn.social(
+      {
+        provider,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => setPending(false),
+        onError: ({ error }) => {
+          setError(error.message);
+          setPending(false);
+        },
+      }
+    );
+  };
+
   if (show2FA) {
     return <Verify2FA email={userEmail} onBack={() => setShow2FA(false)} />;
   }
 
   return (
     <div className="w-full max-w-6xl">
-      {/* Increased max width for two columns */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
+      <div className="bg-[#faf9fe] dark:bg-[#2a243a] rounded-2xl shadow-xl border border-[#e8e6f9] dark:border-[#3b315a] overflow-hidden">
         <div className="flex flex-col lg:flex-row">
-          {/* Left Column - Brand Section */}
-          <div className="lg:w-2/5 bg-gradient-to-br from-blue-500 to-purple-600 px-8 lg:px-12 flex flex-col justify-center items-center text-white">
+          {/* Left Column - Iris gradient & branding */}
+          <div className="lg:w-2/5 bg-gradient-to-br from-[#7b68ee] to-[#a18aff] px-8 lg:px-12 flex flex-col justify-center items-center text-white">
             <div className="flex flex-col items-center text-center space-y-6">
-              {/* Shield Icon */}
-              <div className="p-4 bg-white/20 rounded-2xl shadow-lg backdrop-blur-sm">
-                <Shield className="h-16 w-16 text-white" />
+              <div className="p-4 bg-white/20 rounded-2xl shadow-lg backdrop-blur-sm border border-white/30">
+                <Shield className="h-16 w-16 text-[#f8f7ff]" />
               </div>
-
-              {/* Brand Text */}
               <div className="space-y-4">
-                <h1 className="text-4xl font-bold">Passlock</h1>
-                <p className="text-blue-100 text-lg leading-relaxed">
-                  Secure your digital life with enterprise-grade password
-                  management
+                <h1 className="text-4xl font-bold text-[#faf9fe]">Passlock</h1>
+                <p className="text-[#e8e6f9] text-lg leading-relaxed">
+                  Secure and safe password manager.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Login Form */}
-          <div className="lg:w-3/5 p-8 lg:p-12">
+          {/* Right Column - Form Section */}
+          <div className="lg:w-3/5 p-8 lg:p-12 bg-[#faf9fe] dark:bg-[#2a243a]">
             <div className="max-w-md mx-auto">
-              {/* Form Header */}
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-2xl font-bold text-[#4a3f8c] dark:text-[#dcd6f7] mb-2">
                   Welcome Back
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-[#7b68ee] dark:text-[#b3a7f9]">
                   Sign in to your account to continue
                 </p>
               </div>
 
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-6"
-              >
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                 {error && (
-                  <Alert
-                    variant="destructive"
-                    className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                  >
-                    <AlertTitle className="text-red-800 dark:text-red-400">
+                  <Alert className="bg-[#f6f4ff] dark:bg-[#3b315a] border-[#dcd6f7] dark:border-[#5c4a8a]">
+                    <AlertTitle className="text-[#7b68ee] dark:text-[#b3a7f9]">
                       Error
                     </AlertTitle>
-                    <p className="text-red-700 dark:text-red-400">{error}</p>
+                    <p className="text-[#6a5bbf] dark:text-[#c5bdf7]">{error}</p>
                   </Alert>
                 )}
 
-                {/* Email Input */}
+                {/* Email */}
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Email Address
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-[#9d8fdf]" />
                     <input
                       id="email"
                       type="email"
-                      required
                       {...form.register("email")}
-                      className="block w-full pl-10 pr-3 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-3 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Enter your email"
                     />
                   </div>
-                  {form.formState.errors.email && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {form.formState.errors.email.message}
-                    </p>
-                  )}
                 </div>
 
-                {/* Password Input */}
+                {/* Password */}
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-medium text-[#5a4ea8] dark:text-[#c5bdf7] mb-2"
                   >
                     Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-[#9d8fdf]" />
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      required
                       {...form.register("password")}
-                      className="block w-full pl-10 pr-10 py-3 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 dark:text-gray-200 transition-all"
+                      className="w-full pl-10 pr-10 py-3 bg-white/60 dark:bg-[#3b315a] border border-[#dcd6f7] dark:border-[#5a4a8a] rounded-lg placeholder-[#b3a7f9] text-[#4a3f8c] dark:text-[#e8e6f9] focus:outline-none focus:ring-2 focus:ring-[#9d8fdf] transition-all"
                       placeholder="Enter your password"
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-[#9d8fdf] hover:text-[#7b68ee] dark:hover:text-[#c5bdf7] cursor-pointer"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {form.formState.errors.password && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {form.formState.errors.password.message}
-                    </p>
-                  )}
                 </div>
 
-                {/* Remember Me */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-transparent"
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
+                {/* Submit */}
                 <button
                   type="submit"
                   disabled={pending}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-3 rounded-lg font-medium text-white bg-gradient-to-r from-[#7b68ee] to-[#b3a7f9] hover:from-[#6a5bbf] hover:to-[#9d8fdf] focus:ring-2 focus:ring-[#b3a7f9] focus:outline-none transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {pending ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
                   ) : (
                     "Sign in"
                   )}
                 </button>
 
                 {/* Social Login */}
-                <div className="mt-6">
-                  <div className="relative">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-transparent text-gray-500 dark:text-gray-400">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-2 gap-3">
-                    {/* GitHub Button */}
+                <div className="mt-6 text-center">
+                  <p className="text-[#9d8fdf] dark:text-[#b3a7f9] mb-3">
+                    Or continue with
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
                     <Button
                       type="button"
-                      disabled={pending}
                       onClick={() => onSocial("github")}
-                      className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white/50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      disabled={pending}
+                      className="flex items-center justify-center gap-2 py-3 border border-[#dcd6f7] dark:border-[#5a4a8a] bg-white/70 dark:bg-[#3b315a] text-[#4a3f8c] dark:text-[#e8e6f9] hover:bg-[#f2f0ff] dark:hover:bg-[#45386a] rounded-lg transition-all cursor-pointer"
                     >
-                      <GitHubIcon />
-                      GitHub
+                      <GitHubIcon /> GitHub
                     </Button>
-
-                    {/* Google Button */}
                     <Button
                       type="button"
-                      disabled={pending}
                       onClick={() => onSocial("google")}
-                      className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white/50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      disabled={pending}
+                      className="flex items-center justify-center gap-2 py-3 border border-[#dcd6f7] dark:border-[#5a4a8a] bg-white/70 dark:bg-[#3b315a] text-[#4a3f8c] dark:text-[#e8e6f9] hover:bg-[#f2f0ff] dark:hover:bg-[#45386a] rounded-lg transition-all cursor-pointer"
                     >
-                      <GoogleIcon />
-                      Google
+                      <GoogleIcon /> Google
                     </Button>
                   </div>
                 </div>
               </form>
 
-              {/* Sign Up Link */}
+              {/* Signup link */}
               <div className="mt-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
-                  Don&apos;t have an account?{" "}
+                <p className="text-[#7b68ee] dark:text-[#b3a7f9]">
+                  Don’t have an account?{" "}
                   <Link
                     href="/signup"
-                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    className="font-semibold text-[#5a4ea8] hover:text-[#7b68ee] dark:text-[#dcd6f7] dark:hover:text-[#b3a7f9] transition-colors"
                   >
                     Sign up
                   </Link>

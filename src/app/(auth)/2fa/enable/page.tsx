@@ -13,6 +13,10 @@ const page = async () => {
     redirect('/signin');
   }
 
+  if(session.user.twoFactorEnabled){
+    redirect('/');
+  }
+
   return(
     <Enable2FA />
   );
