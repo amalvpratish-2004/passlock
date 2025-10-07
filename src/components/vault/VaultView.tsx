@@ -122,7 +122,7 @@ export const VaultView = ({userId, twoFactorEnabled}: VaultViewProps) => {
     try {
       await navigator.clipboard.writeText(password);
       setCopiedPasswordId(id);
-      setTimeout(() => setCopiedPasswordId(null), 2000);
+      setTimeout(() => setCopiedPasswordId(null), 15000);
     } catch (err) {
       console.error("Failed to copy password: ", err);
     }

@@ -15,7 +15,7 @@ class EncryptionService {
   private async initialize() {
     await sodium.ready;
     
-    const keyFromEnv = process.env.NEXT_PUBLIC_ENCRYPTION_KEY;
+    const keyFromEnv = process.env.ENCRYPTION_KEY;
     
     if (!keyFromEnv) {
       throw new Error('ENCRYPTION_KEY environment variable is required');

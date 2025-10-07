@@ -23,14 +23,18 @@ export async function POST(request: NextRequest) {
 
     // Encrypt the password on the server
     const encryptedPassword = await encryptionService.encryptPasswordForStorage(password);
+    const encryptedTitle = await encryptionService.encryptPasswordForStorage(title);
+    const encryptedUsername = await encryptionService.encryptPasswordForStorage(username);
+    const encryptedUrl = url ? await encryptionService.encryptPasswordForStorage(url) : null;
+    const encryptedNotes = notes ? await encryptionService.encryptPasswordForStorage(notes) : null;
 
     // Create password document with encrypted password
     const passwordDoc = {
-      title,
-      username,
-      password: encryptedPassword, // Store encrypted
-      url: url || null,
-      notes: notes || null,
+      title: encryptedTitle,
+      username : encryptedUsername,
+      password: encryptedPassword, 
+      url: encryptedUrl,
+      notes: encryptedNotes,
       userId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -85,13 +89,17 @@ export async function GET(request: NextRequest) {
       passwords.map(async (doc) => {
         try {
           const decryptedPassword = await encryptionService.decryptPasswordFromStorage(doc.password);
+          const decryptedTitle = await encryptionService.decryptPasswordFromStorage(doc.title);
+          const decryptedUsername = await encryptionService.decryptPasswordFromStorage(doc.username);
+          const decryptedUrl = doc.url ? await encryptionService.decryptPasswordFromStorage(doc.url) : null;
+          const decryptedNotes = doc.notes ? await encryptionService.decryptPasswordFromStorage(doc.notes) : null;
           return {
             id: doc._id.toString(),
-            title: doc.title,
-            username: doc.username,
+            title: decryptedTitle,
+            username: decryptedUsername,
             password: decryptedPassword, // Send decrypted to client
-            url: doc.url,
-            notes: doc.notes,
+            url: decryptedUrl,
+            notes: decryptedNotes,
             lastModified: doc.updatedAt,
             created: doc.createdAt,
           };
